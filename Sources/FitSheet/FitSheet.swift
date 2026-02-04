@@ -14,27 +14,18 @@ public extension View {
 }
 
 private struct FitSheetModifier: ViewModifier {
-    @State private var contentHeight: CGFloat = 0
+    
+    @State private var contentHeight: CGFloat?
     
     func body(content: Content) -> some View {
         content
-            .background(
-                GeometryReader { geo in
-                    Color.clear
-                        .preference(key: HeightPreferenceKey.self,
-                                    value: geo.size.height)
-                }
-            )
-            .onPreferenceChange(HeightPreferenceKey.self) { newHeight in
+            .onGeometryChange(for: CGFloat.self) { proxy in
+                proxy.size.height
+            } action: { newHeight in
                 contentHeight = newHeight
             }
-            .presentationDetents([.height(contentHeight)])
-    }
-}
-
-private struct HeightPreferenceKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
+            .presentationDetents(
+                contentHeight.map { [.height($0)] } ?? [.medium]
+            )
     }
 }
